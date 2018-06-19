@@ -351,8 +351,6 @@ std::string HelpMessage(HelpMessageMode mode)
 #endif
     }
     strUsage += HelpMessageOpt("-datadir=<dir>", _("Specify data directory"));
-    strUsage += HelpMessageOpt("-disabledeprecation=<version>", strprintf(_("Disable block-height node deprecation and automatic shutdown (example: -disabledeprecation=%s)"),
-        FormatVersion(CLIENT_VERSION)));
     strUsage += HelpMessageOpt("-exportdir=<dir>", _("Specify directory to be used when exporting data"));
     strUsage += HelpMessageOpt("-dbcache=<n>", strprintf(_("Set database cache size in megabytes (%d to %d, default: %d)"), nMinDbCache, nMaxDbCache, nDefaultDbCache));
     strUsage += HelpMessageOpt("-loadblock=<file>", _("Imports blocks from external blk000??.dat file") + " " + _("on startup"));
@@ -772,6 +770,7 @@ bool AppInitServers(boost::thread_group& threadGroup)
  */
 bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
+    LogPrintf("In AppInit2 - Initializing Zcash - 771\n");
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
     // Turn off Microsoft heap dump noise
@@ -831,6 +830,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     std::set_new_handler(new_handler_terminate);
 
     // ********************************************************* Step 2: parameter interactions
+    LogPrintf("In AppInit2 - Parameter Interactions - 832\n");
     const CChainParams& chainparams = Params();
 
     // Set this early so that experimental features are correctly enabled/disabled
@@ -936,7 +936,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     // ********************************************************* Step 3: parameter-to-internal-flags
-
+    LogPrintf("In AppInit2 - Converting Parameters to Internal Flags - 939\n");
     fDebug = !mapMultiArgs["-debug"].empty();
     // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
     const vector<string>& categories = mapMultiArgs["-debug"];
