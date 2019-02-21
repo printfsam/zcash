@@ -28,6 +28,7 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_valid)
         "A12UEL5L",
         "a12uel5l",
         "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1tt5tgs",
+        "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
         "abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
         "11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc8247j",
         "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
@@ -48,7 +49,6 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_invalid)
         " 1nwldj5",
         "\x7f""1axkwrx",
         "\x80""1eym55h",
-        "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
         "pzry9x0s0muk",
         "1pzry9x0s0muk",
         "x1b4n0q5v",
@@ -61,6 +61,39 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_invalid)
     for (const std::string& str : CASES) {
         auto ret = bech32::Decode(str);
         BOOST_CHECK(ret.first.empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(bech32_deterministic_valid)
+{
+    for (size_t i = 0; i < 255; i++) {
+        std::vector<unsigned char> input(32, i);
+        auto encoded = bech32::Encode("a", input);
+        if (i < 32) {
+            // Valid input
+            BOOST_CHECK(!encoded.empty());
+            auto ret = bech32::Decode(encoded);
+            BOOST_CHECK(ret.first == "a");
+            BOOST_CHECK(ret.second == input);
+        } else {
+            // Invalid input
+            BOOST_CHECK(encoded.empty());
+        }
+    }
+
+    for (size_t i = 0; i < 255; i++) {
+        std::vector<unsigned char> input(43, i);
+        auto encoded = bech32::Encode("a", input);
+        if (i < 32) {
+            // Valid input
+            BOOST_CHECK(!encoded.empty());
+            auto ret = bech32::Decode(encoded);
+            BOOST_CHECK(ret.first == "a");
+            BOOST_CHECK(ret.second == input);
+        } else {
+            // Invalid input
+            BOOST_CHECK(encoded.empty());
+        }
     }
 }
 

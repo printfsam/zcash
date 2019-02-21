@@ -101,10 +101,20 @@ public:
         saveToFile(pkPath, keypair.pk);
     }
 
+    void saveR1CS(std::string path)
+    {
+        protoboard<FieldT> pb;
+        joinsplit_gadget<FieldT, NumInputs, NumOutputs> g(pb);
+        g.generate_r1cs_constraints();
+        r1cs_constraint_system<FieldT> r1cs = pb.get_constraint_system();
+
+        saveToFile(path, r1cs);
+    }
+
     bool verify(
-        const ZCProof& proof,
+        const PHGRProof& proof,
         ProofVerifier& verifier,
-        const uint256& pubKeyHash,
+        const uint256& joinSplitPubKey,
         const uint256& randomSeed,
         const std::array<uint256, NumInputs>& macs,
         const std::array<uint256, NumInputs>& nullifiers,
@@ -116,7 +126,7 @@ public:
         try {
             auto r1cs_proof = proof.to_libsnark_proof<r1cs_ppzksnark_proof<ppzksnark_ppT>>();
 
-            uint256 h_sig = this->h_sig(randomSeed, nullifiers, pubKeyHash);
+            uint256 h_sig = this->h_sig(randomSeed, nullifiers, joinSplitPubKey);
 
             auto witness = joinsplit_gadget<FieldT, NumInputs, NumOutputs>::witness_map(
                 rt,
@@ -146,7 +156,7 @@ public:
         std::array<SproutNote, NumOutputs>& out_notes,
         std::array<ZCNoteEncryption::Ciphertext, NumOutputs>& out_ciphertexts,
         uint256& out_ephemeralKey,
-        const uint256& pubKeyHash,
+        const uint256& joinSplitPubKey,
         uint256& out_randomSeed,
         std::array<uint256, NumInputs>& out_macs,
         std::array<uint256, NumInputs>& out_nullifiers,
@@ -209,7 +219,7 @@ public:
         out_randomSeed = random_uint256();
 
         // Compute h_sig
-        uint256 h_sig = this->h_sig(out_randomSeed, out_nullifiers, pubKeyHash);
+        uint256 h_sig = this->h_sig(out_randomSeed, out_nullifiers, joinSplitPubKey);
 
         // Sample phi
         uint252 phi = random_uint252();
@@ -321,7 +331,7 @@ public:
         }
 
         if (!computeProof) {
-            return ZCProof();
+            return PHGRProof();
         }
 
         protoboard<FieldT> pb;
@@ -359,7 +369,7 @@ public:
             throw std::runtime_error(strprintf("could not load param file at %s", pkPath));
         }
 
-        return ZCProof(r1cs_ppzksnark_prover_streaming<ppzksnark_ppT>(
+        return PHGRProof(r1cs_ppzksnark_prover_streaming<ppzksnark_ppT>(
             fh,
             primary_input,
             aux_input,
@@ -389,7 +399,7 @@ template<size_t NumInputs, size_t NumOutputs>
 uint256 JoinSplit<NumInputs, NumOutputs>::h_sig(
     const uint256& randomSeed,
     const std::array<uint256, NumInputs>& nullifiers,
-    const uint256& pubKeyHash
+    const uint256& joinSplitPubKey
 ) {
     const unsigned char personalization[crypto_generichash_blake2b_PERSONALBYTES]
         = {'Z','c','a','s','h','C','o','m','p','u','t','e','h','S','i','g'};
@@ -400,7 +410,7 @@ uint256 JoinSplit<NumInputs, NumOutputs>::h_sig(
         block.insert(block.end(), nullifiers[i].begin(), nullifiers[i].end());
     }
 
-    block.insert(block.end(), pubKeyHash.begin(), pubKeyHash.end());
+    block.insert(block.end(), joinSplitPubKey.begin(), joinSplitPubKey.end());
 
     uint256 output;
 
@@ -428,10 +438,10 @@ JSOutput::JSOutput() : addr(uint256(), uint256()), value(0) {
     addr = a_sk.address();
 }
 
-JSInput::JSInput() : witness(ZCIncrementalMerkleTree().witness()),
+JSInput::JSInput() : witness(SproutMerkleTree().witness()),
                      key(SproutSpendingKey::random()) {
     note = SproutNote(key.address().a_pk, 0, random_uint256(), random_uint256());
-    ZCIncrementalMerkleTree dummy_tree;
+    SproutMerkleTree dummy_tree;
     dummy_tree.append(note.cm());
     witness = dummy_tree.witness();
 }

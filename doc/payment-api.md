@@ -39,7 +39,7 @@ RPC parameter conventions:
 * taddr : Transparent address
 * zaddr : Private address
 * address : Accepts both private and transparent addresses.
-* amount : JSON format double-precision number with 1 ZC expressed as 1.00000000.
+* amount : JSON format decimal number with at most 8 digits of precision, with 1 ZEC expressed as 1.00000000.
 * memo : Metadata expressed in hexadecimal format.  Limited to 512 bytes, the current size of the memo field of a private transaction.  Zero padding is automatic.
 
 ### Accounting
@@ -55,7 +55,7 @@ Command | Parameters | Description
 --- | --- | ---
 z_getnewaddress | | Return a new zaddr for sending and receiving payments. The spending key for this zaddr will be added to the node’s wallet.<br><br>Output:<br>zN68D8hSs3...
 z_listaddresses | | Returns a list of all the zaddrs in this node’s wallet for which you have a spending key.<br><br>Output:<br>{ [“z123…”, “z456...”, “z789...”] }
-z_validateaddress | zaddr | Return information about a given zaddr.<br><br>Output:<br>{"isvalid" : true,<br>"address" : "zcWsmq...",<br>"payingkey" : "f5bb3c...",<br>"transmissionkey" : "7a58c7...",<br>"ismine" : true}
+z_validateaddress | zaddr | Return information about a given zaddr.<br><br>Output:<br>{"isvalid" : true,<br>"address" : "zcWsmq...",<br>"type" : "sprout",<br>"payingkey" : "f5bb3c...",<br>"transmissionkey" : "7a58c7...",<br>"ismine" : true}
 
 ### Key Management
 
